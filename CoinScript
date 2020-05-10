@@ -1,0 +1,64 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class coinBombScript : MonoBehaviour
+{
+    //Variables
+    Rigidbody2D rb2d;
+
+    float explosionRange = 0.7f;
+
+    public LayerMask playerLayer;
+    public Animator animator;
+
+    bool coinExploding;
+    bool coinliving = true;
+
+ 
+    void Start()
+    {
+        rb2d = gameObject.GetComponent<Rigidbody2D>();
+    }
+    
+
+    private void Update()
+    {
+        //Det eneste, update funktionen gør i denne kode, er at sørge for at mønten forbliver i samme position mens den eksploderer.
+        if (coinExploding)
+        {
+            rb2d.velocity = new Vector2(0,0);
+        }
+    }
+
+    void destroyCoin()
+    {
+        if (coinliving)
+        {
+            //Objektet sættes til at blive fjernet fra programmet om 0.15 sekunder. Animationen spilles, og skade bliver uddelt til alle objekter i playerLayer
+            Destroy(gameObject, 0.15f);
+            animator.SetTrigger("explode");
+
+            Collider2D[] explosionHits = Physics2D.OverlapCircleAll(transform.position, explosionRange, playerLayer);
+
+            foreach(Collider2D player in explosionHits)
+            {
+                player.GetComponent<respawn>().hitByCoin = true;
+                coinExploding = true;
+            }
+            
+            //Denne sørger for, at eksplosionen kun sker 1 gang
+            coinliving = false;
+        }
+    }
+
+    void OnCollisionEnter2D(Collision2D collision)
+    {
+        //hvis mønten rammer noget der betegnes som jord, en spiller eller en ventilator
+        if(collision.gameObject.layer == 10 || collision.gameObject.layer == 11 || collision.gameObject.layer == 14)
+        {
+            destroyCoin();
+        }
+    }
+
+}
