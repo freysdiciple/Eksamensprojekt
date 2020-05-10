@@ -1,0 +1,153 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.Experimental.Rendering.LWRP;
+
+public class LightScript : MonoBehaviour
+{
+    //De tre lys der styres gennem scriptet:
+    public UnityEngine.Experimental.Rendering.Universal.Light2D global;
+    public UnityEngine.Experimental.Rendering.Universal.Light2D local;
+    public UnityEngine.Experimental.Rendering.Universal.Light2D bossLight;
+    
+    public movementController mC;
+    public sceneTransitionScript sT;
+
+    public Color bossLight1;
+    public Color bossLight2;
+
+    float GstandardInt = 0.4f;
+    float LstandardInt = 0;
+    float Gchange;
+    float Lchange;
+    float Gbit;
+    float Lbit;
+    float GchangeSpeed = 0.001f;
+    float LchangeSpeed = 0.01f;
+
+    //Levelindex
+    int start = 0;
+    int level1 = 1;
+    int steal = 2;
+    int level2 = 3;
+    int level3 = 4;
+    int change = 5;
+
+    bool waterLight;
+    public int changeState;
+
+    // Start is called before the first frame update
+    void Start()
+    {
+        global.intensity = GstandardInt;
+        local.intensity = LstandardInt;
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        //Det bliver her tjekket hvor i levelet man er, og lyset ændrer sig ud fra det
+        if (mC.inPool)
+        {
+            global.enabled = false;
+            local.enabled = true;
+            Gchange = 0;
+            Lchange = 1.5f;
+        }
+        else if (sT.stage == start)
+        {
+            if(changeState == 0)
+            {
+                global.enabled = true;
+                local.enabled = false;
+                Gchange = 0f;
+                Lchange = 0;
+                bossLight.color = bossLight1;
+            }
+
+            if(changeState == 1)
+            {
+                global.enabled = true;
+                local.enabled = false;
+                Gchange = 0.4f;
+                Lchange = 0;
+                bossLight.color = bossLight2;
+            }
+            
+
+        }
+        else if (sT.stage == level1)
+        {
+            global.enabled = true;
+            local.enabled = true;
+            Gchange = 0;
+            Lchange = 1;
+        }
+        else if (sT.stage == level2)
+        {
+            global.enabled = true;
+            local.enabled = true;
+            Gchange = 0;
+            Lchange = 1;
+        }
+        else if(sT.stage == level3)
+        {
+            global.enabled = true;
+            local.enabled = true;
+            Gchange = 0;
+            Lchange = 1;
+        }
+        else if(sT.stage == steal)
+        {
+            global.enabled = true;
+            local.enabled = true;
+            Gchange = 0;
+            Lchange = 1;
+        }
+        else if(sT.stage == change)
+        {
+            if(changeState == 0)
+            {
+                global.enabled = true;
+                local.enabled = false;
+                Gchange = 0.2f;
+                Lchange = 0;
+            }
+            if(changeState == 1)
+            {
+                global.enabled = true;
+                local.enabled = false;
+                Gchange = 0.6f;
+                Lchange = 0;
+            }
+        }
+
+        changeIntensity();
+    }
+    
+    //Denne funktion er den der faktisk ændrer intesiteten af de lys der skal ændres
+    void changeIntensity()
+    {
+        if (Gbit < Gchange)
+        {
+            Gbit += GchangeSpeed;
+        }
+        if (Gbit > Gchange)
+        {
+            Gbit -= GchangeSpeed;
+        }
+
+        global.intensity = GstandardInt + Gbit;
+
+        if (Lbit < Lchange)
+        {
+            Lbit += LchangeSpeed;
+        }
+        if (Lbit > Lchange)
+        {
+            Lbit -= LchangeSpeed;
+        }
+
+        local.intensity = LstandardInt + Lbit;
+    }
+}
