@@ -1,0 +1,96 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class PlayerMovement : MonoBehaviour
+{
+    public CharacterController2D controller;
+    public Animator playerAnimator;
+    Rigidbody2D rb2d;
+    respawn repawn;
+
+    public float runSpeed = 80f;
+
+    public float horizontalMove;
+
+    bool jump;
+    public bool crouch;
+    public bool canTakeDamage = true;
+
+
+    float prevVelY;
+    float currVelY;
+    int jumpState;
+
+    private void Start()
+    {
+        rb2d = GetComponent<Rigidbody2D>();
+        repawn = GetComponent<respawn>();
+        crouch = false;
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        if (repawn.alive)
+        {
+        //Tager Input
+            Physics();
+        }
+  
+        
+
+    }
+
+    void FixedUpdate()
+    {
+        if (repawn.alive)
+        {
+        //Bruger Input
+            PhysicsFixed();
+        }
+       
+        
+        
+    }
+
+    void Physics()
+    {
+
+        horizontalMove = Input.GetAxisRaw("Horizontal") * runSpeed;
+        playerAnimator.SetFloat("speed", Mathf.Abs(horizontalMove));
+
+        if (Input.GetButtonDown("Jump"))
+        {
+            jump = true;
+            playerAnimator.SetBool("IJ", true);
+            playerAnimator.SetTrigger("jumpAround");
+        }
+
+        if (Input.GetButtonDown("Crouch"))
+        {
+            crouch = true;
+        }
+
+        else if (Input.GetButtonUp("Crouch"))
+        {
+            crouch = false;
+        }
+
+    }
+
+    public void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (collision.gameObject.layer == 10)
+        {
+            playerAnimator.SetBool("IJ", false);
+        }
+    }
+
+    void PhysicsFixed()
+    {
+        controller.Move(horizontalMove * Time.fixedDeltaTime, crouch, jump);
+        jump = false;
+
+    }
+}
