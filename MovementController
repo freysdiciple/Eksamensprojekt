@@ -1,0 +1,141 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class movementController : MonoBehaviour
+{
+    PlayerMovement pM;
+    Swimming sM;
+    CharacterController2D cc;
+    Animator anim;
+    AttackScript aS;
+    respawn r;
+
+    public Transform tlp;
+    public Transform brp;
+
+    public bool inPool;
+    public bool abovePool;
+    public bool onLand;
+    public bool canTakeDamage;
+    public bool showItems = true;
+    bool startCountDown;
+    bool crouching;
+    int s;
+
+    void Start()
+    {
+        showItems = true;
+        pM = GetComponent<PlayerMovement>();
+        sM = GetComponent<Swimming>();
+        cc = GetComponent<CharacterController2D>();
+        anim = GetComponent<Animator>();
+        aS = GetComponent<AttackScript>();
+        r = GetComponent<respawn>();
+    }
+
+    void FixedUpdate()
+    {
+        //Tjekker om spilleren er på land, over poolen, eller nede i poolen
+        checkState();
+        
+        //Styrer de visuelle aspekter af den defensive mekanik
+        checkCrouch();
+
+        if (inPool)
+        {
+            pM.enabled = false;
+            sM.enabled = true;
+            sM.inPool = true;
+            cc.jumpState = 0;
+           
+        }
+
+        if (abovePool)
+        {
+            pM.enabled = true;
+            sM.enabled = false;
+            sM.inPool = false;
+           
+        }
+
+        if (onLand)
+        {
+            pM.enabled = true;
+            sM.enabled = false;
+            sM.inPool = false;
+        }
+
+        if (onLand && inPool)
+        {
+            pM.enabled = true;
+            sM.enabled = false;
+            inPool = false;
+        }
+    }
+
+    void checkState()
+    {
+        if (transform.position.x > tlp.position.x && transform.position.x < brp.position.x)
+        {
+            onLand = false;
+            if (transform.position.y < tlp.position.y && transform.position.y > brp.position.y)
+            {
+                anim.SetBool("inWater", true);
+                inPool = true;
+                abovePool = false;
+            }
+            else
+            {
+                inPool = false; abovePool = true;
+                anim.SetBool("inWater", false);
+            }
+        }
+        else
+        {
+            onLand = true;
+            anim.SetBool("inWater", false);
+        }
+    }
+
+    void checkCrouch()
+    {
+
+        if (Input.GetButtonDown("Crouch"))
+        {
+            crouching = true;
+            showItems = false;
+            anim.SetTrigger("crouch");
+            anim.SetBool("IC", true);
+        }
+        if (Input.GetButtonUp("Crouch"))
+        {
+            s = 0;
+            startCountDown = true;
+            crouching = false;
+            anim.SetBool("IC", false);
+        }
+
+        if (startCountDown)
+        {
+            s++;
+            if(s > 12)
+            {
+                startCountDown = false;
+                showItems = true;
+                
+            }
+
+        }
+        if(crouching || aS.striking)
+        {
+            canTakeDamage = false;
+        }
+        if(!crouching && !aS.striking)
+        {
+            canTakeDamage = true;
+        }
+    }
+
+
+}
