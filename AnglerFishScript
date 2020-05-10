@@ -1,0 +1,255 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class FishScript2 : MonoBehaviour
+{
+    Animator animator;
+    Rigidbody2D rb2d;
+
+    Transform player;
+
+    public GameObject exPoint;
+    public GameObject scaryLight;
+    public Transform leadLight;
+    public Transform[] leadLightPoints;
+    public Transform[] topBottomPoints;
+
+    int behaviour;
+    public int pool;
+
+    float angleBetween;
+    float distance;
+    float attackRange = 4;
+    float attackForce = 30;
+    float stalkRange = 8;
+    float stalkForce = 40;
+
+    bool inWater;
+    bool playerInWater;
+
+    Vector3 ogPos;
+    Vector2 lpt = new Vector2(207, 23);
+    Vector2 rpb = new Vector2(260, 0);
+    Vector2 lft = new Vector2(262, 15);
+    Vector2 rfb = new Vector2(284, -7);
+
+    // Start bliver kaldt i ved programmets start, eller ved spilobjektets introduktion
+    void Start()
+    {
+        animator = GetComponent<Animator>();
+        rb2d = GetComponent<Rigidbody2D>();
+        player = GameObject.Find("Player").GetComponent<Transform>();
+
+        ogPos = transform.position;
+    }
+
+    
+    void FixedUpdate()
+    {
+        checkIfInWater();
+        checkDistance();
+
+        if(inWater)
+        {
+            if (playerInWater)
+            {
+                if (distance < attackRange)
+                {
+                    facePlayer();
+                    striiike();
+                }
+                else if (distance < stalkRange)
+                {
+                    facePlayer();
+                    staaalk();
+                }
+                else
+                {
+                    whenPlayerGone();
+                }
+            }
+            else
+            {
+                whenPlayerGone();
+            }
+
+        }
+
+        generalPhysics();
+
+        visuals();
+
+    }
+
+    void visuals()
+    {
+        //Hvis den angriber
+        if (behaviour == 2)
+        {
+            animator.SetBool("attacking", true);
+            exPoint.SetActive(true);
+            scaryLight.SetActive(true);
+            leadLight.position = leadLightPoints[1].position;
+        }
+        else
+        {
+            animator.SetBool("attacking", false);
+            exPoint.SetActive(false);
+            scaryLight.SetActive(false);
+            leadLight.position = leadLightPoints[0].position;
+        }
+
+    }
+
+    //Denne funktion sørger for, at fisken altid vender den rigtige vej, og aldrig er på hovedet
+    void checkFlip()
+    {
+        if (topBottomPoints[0].position.y < topBottomPoints[1].position.y)
+        {
+            Vector3 Scale = transform.localScale;
+            Scale.y *= -1;
+            transform.localScale = Scale;
+
+        }
+    }
+
+    void facePlayer()
+    {
+        angleBetween = Mathf.Atan2(player.transform.position.y - transform.position.y, player.transform.position.x - transform.position.x) * Mathf.Rad2Deg;
+        
+        rb2d.rotation = angleBetween;
+
+        checkFlip();
+    }
+
+    void checkIfInWater()
+    {
+        //Tjekker om fisken er i poolen
+        if (transform.position.x > lpt.x && transform.position.x < rfb.x)
+        {
+            if (transform.position.y < lpt.y && transform.position.y > rfb.y)
+            {
+                inWater = true;
+            }
+            else { inWater = false; }
+        }
+        else
+        {
+            inWater = false;
+        }
+        
+        //Tjekker om spilleren befinder sig i den første del af poolen
+        if(pool == 0)
+        {
+
+            if (player.position.x > lpt.x && player.position.x < rpb.x)
+            {
+                if (player.position.y < lpt.y && player.position.y > rpb.y)
+                {
+                    playerInWater = true;
+                }
+                else { playerInWater = false; }
+            }
+            else
+            {
+                playerInWater = false;
+            }
+        }
+        
+        //Tjekker om spilleren befinder sig i den anden del af poolen
+        if (pool == 1)
+        {
+
+            if (player.position.x > lft.x && player.position.x < rfb.x)
+            {
+                if (player.position.y < lft.y && player.position.y > rfb.y)
+                {
+                    playerInWater = true;
+                }
+                else { playerInWater = false; }
+            }
+            else
+            {
+                playerInWater = false;
+            }
+        }
+    }
+
+    void applyDrag()
+    {
+        //Det drag fisken mærker under vandet er en funktion af dens hastighed
+        float dragForce = -8;
+        Vector2 dragVector = new Vector2(rb2d.velocity.x * dragForce, rb2d.velocity.y * dragForce);
+
+        if (inWater)
+        {
+            rb2d.AddForce(dragVector);
+        }
+
+    }
+
+    void buoyancy()
+    {
+        float gravityValue = -9.81f;
+
+        Vector2 gravityVector = new Vector2(0f, gravityValue);
+        Vector2 buoyancyVector = new Vector2(0f, -gravityValue);
+        if (inWater)
+        {
+            rb2d.AddForce((gravityVector + buoyancyVector)*Time.deltaTime, ForceMode2D.Impulse);
+        }
+        else { rb2d.AddForce(gravityVector * Time.deltaTime, ForceMode2D.Impulse); }
+
+    }
+
+    void generalPhysics()
+    {
+        applyDrag();
+        buoyancy();
+    }
+    
+    //Denne funktion bevæger fisken tilbage til dens originale position hvis spilleren forlader dens del af poolen
+    void whenPlayerGone()
+    {
+
+        rb2d.rotation = Mathf.Atan2(ogPos.y - transform.position.y, ogPos.x - transform.position.x) * Mathf.Rad2Deg;
+
+        checkFlip();
+
+        transform.position = Vector3.MoveTowards(transform.position, ogPos, 2*Time.deltaTime);
+
+        behaviour = 0;
+
+        if(transform.position == ogPos)
+        {
+            rb2d.rotation = 0;
+        }
+    }
+
+    void checkDistance()
+    {
+        distance = Vector2.Distance(player.transform.position, transform.position);
+    }
+
+    void staaalk()
+    {
+        Vector2 forceVector = new Vector2(stalkForce * Mathf.Cos(angleBetween * Mathf.Deg2Rad), stalkForce * Mathf.Sin(angleBetween * Mathf.Deg2Rad));
+        rb2d.AddForce(forceVector);
+        behaviour = 1;
+    }
+
+    void striiike()
+    {
+        Vector2 forceVector = new Vector2(attackForce * Mathf.Cos(angleBetween * Mathf.Deg2Rad), attackForce * Mathf.Sin(angleBetween * Mathf.Deg2Rad));
+        rb2d.AddForce(forceVector);
+        behaviour = 2;
+    }
+
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        //Når fisken rammer noget, bider den sammen
+        animator.SetTrigger("Chomp");
+    }
+
+}
