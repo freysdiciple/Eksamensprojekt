@@ -1,0 +1,110 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class bombScript : MonoBehaviour
+{
+    Rigidbody2D rb2d;
+    public Animator animator;
+    public LayerMask playerLayer;
+
+
+    bool inWater;
+    bool bombAlive = true;
+    bool startCountDown;
+
+    float dragForce = -4f;
+    float i;
+    float expWidth = 1f;
+
+    Vector2 dragVector;
+    //Vektorer der beskriver hvor poolen befinder sig
+    Vector2 lpt = new Vector2(207.5f, 28.4f);
+    Vector2 rpb = new Vector2(283.75f, -7.3f);
+
+    // Start is called before the first frame update
+    void Start()
+    {
+        rb2d = GetComponent<Rigidbody2D>();
+    }
+
+    // FixedUpdate bliver kaldt et specifikt antal gange pr. sekund, og man bruger den derfor, når man anvender fysik på spilobjekter
+    void FixedUpdate()
+    {
+        checkIfInWater();
+        if (inWater)
+        {
+            //Hvis den befinder sig i vandet, starter nedtællingen
+            applyDrag();
+            checkCountDown();
+        }
+
+        countDown();
+    }
+
+    void checkIfInWater()
+    {
+        if(transform.position.x > lpt.x && transform.position.x < rpb.x)
+        {
+            if (transform.position.y < lpt.y && transform.position.y > rpb.y)
+            {
+                inWater = true;
+            }
+            else { inWater = false; }
+        }
+    }
+
+    void applyDrag()
+    {
+        //Det drag som sækken føler i vandet, er et produkt af den hastighed.
+        dragVector = new Vector2(rb2d.velocity.x * dragForce, rb2d.velocity.y * dragForce);
+        rb2d.AddForce(dragVector);
+    }
+
+    void checkCountDown()
+    {
+        //Sørger for at countdownen starter 1 gang
+        if (bombAlive)
+        {
+            startCountDown = true;
+            bombAlive = false;
+            
+        }
+        
+    }
+
+    void countDown()
+    {
+        if (startCountDown)
+        {
+            //Spilobjekter sættes til at fjernes fra programmet efter 2.25 sekunder, mens animation startes
+            Destroy(gameObject, 2.25f);
+            animator.SetTrigger("countDown");
+            i++;
+            if (i > 100)
+            {
+                explode();
+            }
+        }
+        
+    }
+
+    void explode()
+    {
+        //Samme eksplosions princip som mønten
+        animator.SetTrigger("explode");
+        Collider2D[] explosionHits = Physics2D.OverlapCircleAll(transform.position, expWidth, playerLayer);
+
+        foreach (Collider2D player in explosionHits)
+        {
+            player.GetComponent<respawn>().hitByBomb = true;
+        }
+
+    }
+
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        //Starter countdown hvis den rammer noget so helst
+        checkCountDown();
+    }
+}
