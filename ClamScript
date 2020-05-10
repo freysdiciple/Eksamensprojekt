@@ -1,0 +1,113 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class clamScript : MonoBehaviour
+{
+    public Transform middle;
+    Transform player;
+    float range = 1.6f;
+    float distance;
+
+    Animator animator;
+    AreaEffector2D ae2d;
+    GameObject pearlLight;
+
+    bool playerInRange;
+    bool startCountDown;
+
+    int clamState;
+    float time;
+
+    void Start()
+    {
+        animator = GetComponent<Animator>();
+        ae2d = GetComponent<AreaEffector2D>();
+        ae2d.enabled = false;
+        player = GameObject.Find("Player").GetComponent<Transform>();
+    }
+
+    void FixedUpdate()
+    {
+        CheckIfPlayerInRange();
+        
+        //Hvis spilleren er i muslingen, og muslingen ikke er begyndt at åbne endnu
+        if (playerInRange && clamState == 0)
+        {
+            Suck();
+        }
+        
+        //En timer startes, der styrer muslingens opførsel mens den lukker
+        if (startCountDown)
+        {
+            time += Time.deltaTime;
+            if(time > 0.2f)
+            {
+                time = 0;
+                startCountDown = false;
+                
+                //Efter 0.2 sekunder stopper countdownen, og koden tjekker hvad der skal ske
+                if(clamState == 1)
+                {
+                    clamState = 2;
+                    ae2d.enabled = false;
+                }
+
+                if(clamState == 3)
+                {
+                    clamState = 0;
+                }
+            }
+        }
+        
+        //Hvis muslingen er lukket, og spilleren er respawnet ved sidste checkpoint, skal den åbne
+        if(clamState == 2)
+        {
+            if (!playerInRange)
+            {
+                Open();
+            }
+            //Muslingen rykker et lag frem, så det ligner, at spilleren er inde i den
+            GetComponent<SpriteRenderer>().sortingOrder = 20;
+            pearlLight.SetActive(false);
+        }
+        else
+        {
+            GetComponent<SpriteRenderer>().sortingOrder = 5;
+            pearlLight.SetActive(true);
+        }
+        
+        
+        if (!playerInRange)
+        {
+            clamState = 0;
+        }
+     
+        
+    }
+
+    void CheckIfPlayerInRange()
+    {
+        distance = Vector2.Distance(middle.position, player.position);
+        if (distance < range)
+        {
+            playerInRange = true;
+        }
+        else { playerInRange = false; }
+    }
+
+    void Suck()
+    {
+        animator.SetTrigger("Close");
+        clamState = 1;
+        ae2d.enabled = true;
+        startCountDown = true;
+
+    }
+
+    void Open()
+    {
+        animator.SetTrigger("Open");
+        clamState = 3;
+    }
+}
