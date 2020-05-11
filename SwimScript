@@ -1,0 +1,116 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class Swimming : MonoBehaviour
+{
+    public bool inPool;
+
+    Rigidbody2D rb2d;
+    CharacterController2D cc2d;
+    respawn repawn;
+    Animator animator;
+
+    float horizontalMove;
+    public float swimForce = 100;
+    public float wJumpForce = 500;
+    public float buoyancyForce = 45;
+    public float dragForce = -0.1f;
+
+    Vector2 moveVector;
+    Vector2 dragVector;
+
+    // Start is called before the first frame update
+    void Start()
+    {
+        rb2d = GetComponent<Rigidbody2D>();
+        cc2d = GetComponent<CharacterController2D>();
+        repawn = GetComponent<respawn>();
+        animator = GetComponent<Animator>();
+    }
+
+    void Update()
+    {   
+        //Da vi har at gøre med fysik, bruges Update-funktionen kun til at fange Input fra keyboardet
+        if (repawn.alive)
+        {
+            if (inPool)
+            {
+                upAcc();
+            }
+        }
+
+    }
+
+    void FixedUpdate()
+    {
+        if (repawn.alive)
+        {   
+            //I poolen kan spilleren bevæge sig frit, men over vandet kan spilleren kan bevæge sig fra side til side
+            if (inPool)
+            {
+                buoyAcc();
+                moveLeftRight();
+                ApplyDrag();
+            }
+            else
+            {
+                moveLeftRight();
+            }
+        }
+        
+        //Hvis spilleren dør i poolen, falder han til bunds
+        if (inPool && !repawn.alive)
+        {
+            buoyAcc();
+            ApplyDrag();
+        }
+
+    }
+
+    void moveLeftRight()
+    {
+        horizontalMove = Input.GetAxisRaw("Horizontal");
+
+        moveVector = new Vector2(horizontalMove * swimForce, 0);
+        dragVector = new Vector2(rb2d.velocity.x, rb2d.velocity.y);
+
+        if(Mathf.Abs(horizontalMove) > 0)
+        {
+            rb2d.AddForce(moveVector);
+        }
+        
+        //Vender spilleren, så han peger mod bevægelseretningen
+        if (horizontalMove > 0 && !cc2d.m_FacingRight)
+        {
+            cc2d.Flip();
+        }
+        if(horizontalMove < 0 && cc2d.m_FacingRight)
+        {
+            cc2d.Flip();
+        }
+
+    }
+
+    void upAcc()
+    {
+        if (Input.GetKeyDown("w") || Input.GetKeyDown(KeyCode.UpArrow))
+        { 
+            animator.SetTrigger("swim");
+            animator.ResetTrigger("stopswim");
+            rb2d.AddForce(new Vector2(0f, wJumpForce));
+        }
+    }
+
+    void buoyAcc()
+    {
+        rb2d.AddForce(new Vector2(0, buoyancyForce));
+    }
+
+    void ApplyDrag()
+    {
+        dragVector = new Vector2(rb2d.velocity.x * dragForce, rb2d.velocity.y * dragForce);
+        rb2d.AddForce(dragVector);
+    }
+
+}
