@@ -1,0 +1,100 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class AttackScript : MonoBehaviour
+{
+    public GameObject sword;
+    public Animator animator;
+    Rigidbody2D rb2d;
+    itemHandler iH;
+    CharacterController2D cc2d;
+
+    public Transform swingPoint;
+    float attackRange = 1;
+
+    public LayerMask enemies;
+
+    float hitDamage = 40;
+
+    float hitTime;
+    float strikeDuration = 0.4f;
+
+    bool canHit;
+    bool canDeal;
+    public bool striking;
+
+    void Start()
+    {
+        iH = GetComponent<itemHandler>();
+        rb2d = GetComponent<Rigidbody2D>();
+        cc2d = GetComponent<CharacterController2D>();
+    }
+
+    void Update()
+    {
+        checkIfCanHit();
+        
+        //Når man trykker, tjekker den om man kan slå endnu
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            if (canHit)
+            {
+                attack();
+            }
+        }
+        
+        //Hvis angrebet er igangværende
+        if (striking)
+        {
+            rb2d.velocity = new Vector2(0,0);
+            
+            //Halvvejs gennem svinget tager fjender skade
+            if(Time.time > hitTime + strikeDuration/2)
+            {
+                if (canDeal)
+                {
+                    Collider2D[] Hits = Physics2D.OverlapCircleAll(swingPoint.position, attackRange, enemies);
+
+                    foreach (Collider2D enemy in Hits)
+                    {
+                        enemy.GetComponent<enemyHealthScript>().takeDamage(hitDamage);
+                    }
+                    canDeal = false;
+
+                }
+            }
+        }
+        
+    }
+
+    void checkIfCanHit()
+    {
+        //Hvis man har fået sværdet, står på jorden og ikke allerede er igang med at slå, kan man slå med sværdet.
+        if (iH.swordObtained)
+        {
+            if (Time.time > hitTime + strikeDuration)
+            {
+                canHit = true;
+                striking = false;
+            }
+            if (cc2d.jumpState > 0)
+            {
+                canHit = false;
+                striking = false;
+            }
+        }
+        else { canHit = false; }
+    }
+
+    void attack()
+    {
+        animator.SetTrigger("strike");
+        striking = true;
+        canDeal = true;
+        canHit = false;
+        hitTime = Time.time;
+    }
+
+    
+}
