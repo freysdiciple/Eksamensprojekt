@@ -1,0 +1,99 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class itemHandler : MonoBehaviour
+{
+    public movementController mC;
+    public AttackScript aS;
+
+    public GameObject Satchel;
+    public GameObject Sword;
+
+    public bool swordObtained;
+    public bool overRideSO;
+    bool showSword;
+    public bool satchelObtained;
+    bool showSatchel;
+
+    void Start()
+    {
+        swordObtained = false;
+        satchelObtained = false;
+        if (overRideSO)
+        {
+            swordObtained = true;
+            satchelObtained = true;
+        }
+    }
+    
+    void Update()
+    {
+        SwordController();
+        SatchelController();
+        showItemsOrNah();
+    }
+
+    void SwordController()
+    {
+        if (swordObtained)
+        {
+            if (mC.showItems)
+            {
+                //Hvis man har fået sværdet og det må vise sig, bliver det vist. Når man er igang med at svinge det, forsvinder det fra johnnys ryg.
+                if (aS.striking)
+                {
+                    showSword = false;
+                }
+                if (!aS.striking)
+                {
+                    showSword = true;
+                }
+            }
+            else
+            {
+                showSword = false;
+            }
+        }
+        else
+        {
+            showSword = false;
+        }
+    }
+
+    void SatchelController()
+    {
+        if (satchelObtained)
+        {
+            //Hvis man har samlet posen op, og den gerne må vises, så bliver den vist.
+            if (mC.showItems)
+            {
+                showSatchel = true;
+            }
+            else
+            {
+                showSatchel = false;
+            }
+        }
+        else
+        {
+            showSatchel = false;
+        }
+    }
+
+    void showItemsOrNah()
+    {
+        //Får items til at vise sig, hvis de må vises
+        if (showSword)
+        {
+            Sword.SetActive(true);
+        }
+        else { Sword.SetActive(false); }
+
+        if (showSatchel)
+        {
+            Satchel.SetActive(true);
+        }
+        else { Satchel.SetActive(false); }
+    }
+}
