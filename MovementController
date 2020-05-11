@@ -34,7 +34,7 @@ public class movementController : MonoBehaviour
         r = GetComponent<respawn>();
     }
 
-    void FixedUpdate()
+    void Update()
     {
         //Tjekker om spilleren er på land, over poolen, eller nede i poolen
         checkState();
