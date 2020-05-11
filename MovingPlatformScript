@@ -1,0 +1,39 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class movingPlatform : MonoBehaviour
+{
+    public GameObject platform;
+    public Transform[] Limits;
+    public Transform goalPos;
+    public float moveSpeed = 0.6f;
+
+    void Start()
+    {
+        goalPos = Limits[0];
+    }
+
+    void Update()
+    {
+        //Platformen bliver flyttet fra den første grænse til den anden og omvendt.
+        platform.transform.position = Vector3.MoveTowards(platform.transform.position, goalPos.transform.position, moveSpeed * Time.deltaTime);
+        if(platform.transform.position == goalPos.transform.position)
+        {
+            if(goalPos == Limits[0])
+            {
+                goalPos = Limits[1];
+            }
+        }
+        if (platform.transform.position == goalPos.transform.position)
+        {
+            if (goalPos == Limits[1])
+            {
+                goalPos = Limits[0];
+            }
+        }
+    }
+
+    
+
+}
