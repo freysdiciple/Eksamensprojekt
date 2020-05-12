@@ -1,0 +1,81 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class canonScript : MonoBehaviour
+{
+    public Transform firingPoint;
+    public Rigidbody2D rb2d;
+    Rigidbody2D coin;
+    public Transform coinStorage;
+    public Animator animator;
+
+    float timeBetween = 1f;
+    float prevTime;
+
+    float fireForce = 25;
+    public float fireAngle = 10;
+
+    bool canFire;
+    bool canShow;
+    public bool delayed;
+
+    void Start()
+    {
+        //Sørger for at nogle af kanonerne kan skydes
+        if (delayed)
+        {
+            prevTime = Time.time + timeBetween/2;
+        }
+        else { prevTime = Time.time; }
+
+    }
+
+    void Update()
+    {
+        checkIfCanFire();
+        checkIfCanShow();
+        if (canFire)
+        {
+            createCoin();
+            fireCoin();
+        }
+    }
+
+    void createCoin()
+    {
+        coin = Instantiate(rb2d, firingPoint.position, firingPoint.rotation, coinStorage);
+        prevTime = Time.time;
+    }
+
+    void fireCoin()
+    {
+        Vector2 fireVector = new Vector2(Mathf.Cos(fireAngle * Mathf.Deg2Rad), Mathf.Sin(fireAngle * Mathf.Deg2Rad));
+        coin.AddForce(fireVector * fireForce, ForceMode2D.Impulse);
+
+    }
+
+    void checkIfCanFire()
+    {
+        if (Time.time > prevTime + timeBetween)
+        {
+            canFire = true;
+        }
+        else { canFire = false; }
+    }
+
+    void checkIfCanShow()
+    {
+        //Forskyder animationen med 0.3 sekunder af at mønten bliver skudt
+        if (Time.time > prevTime + timeBetween - 0.3f)
+        {
+            if (canShow)
+            {
+                animator.SetTrigger("fire");
+                canShow = false;
+            }
+            
+        }
+        else { canShow = true; }
+    }
+}
