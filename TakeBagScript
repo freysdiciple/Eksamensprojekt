@@ -1,0 +1,49 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class secureTheBagScript : MonoBehaviour
+{
+    public itemHandler iH;
+
+    public GameObject pickUpText;
+    public GameObject SatchelBag;
+    public Transform Player;
+
+    bool playerInRange;
+
+    float pickUpRange = 2;
+
+    // Update is called once per frame
+    void Update()
+    {
+        checkIfPlayerInRange();
+        ifPickedUp();
+    }
+
+    void ifPickedUp()
+    {
+        if (playerInRange)
+        {
+            if (Input.GetKeyDown("e"))
+            {
+                iH.satchelObtained = true;
+                gameObject.SetActive(false);
+            }
+        }
+    }
+
+    void checkIfPlayerInRange()
+    {
+        if (Vector3.Distance(Player.position, transform.position) < pickUpRange)
+        {
+            playerInRange = true;
+            pickUpText.SetActive(true);
+        }
+        else
+        {
+            playerInRange = false;
+            pickUpText.SetActive(false);
+        }
+    }
+}
