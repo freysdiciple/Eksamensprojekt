@@ -1,0 +1,203 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+
+public class sceneTransitionScript : MonoBehaviour
+{
+    public speechScript SS;
+    LightScript lS;
+    public audioHandler auido;
+    public Transform startPoint;
+
+    //Spawn and Travel points
+    public Transform tSL1;
+    public Transform sSL1;
+
+    public Transform tL1S;
+    public Transform sL1S;
+
+    public Transform tL1R1;
+    public Transform sL1R1;
+
+    public Transform tR1L1;
+    public Transform sR1L1;
+
+    public Transform tL2R2;
+    public Transform sL2R2;
+
+    public Transform tR2L2;
+    public Transform sR2L2;
+
+    public Transform tL2L3;
+    public Transform sL2L3;
+
+    public Transform tL3L2;
+    public Transform sL3L2;
+
+    public Transform tL3C;
+    public Transform sL3C;
+
+    public Transform tCL3;
+    public Transform sCL3;
+
+    //Levelindex
+    int start = 0;
+    int level1 = 1;
+    int steal = 2;
+    int level2 = 3;
+    int level3 = 4;
+    int change = 5;
+
+    //Other
+    public int stage;
+
+    bool stealText = true;
+    bool level23Text = true;
+    bool changeText = true;
+
+
+    void Start()
+    {
+        lS = GetComponent<LightScript>();
+        stage = start;
+        transform.position = startPoint.position;
+    }
+
+
+    void Update()
+    {
+
+        if(stage == start)
+        {
+            checkChangeFromStart();
+        }
+        if(stage == level1)
+        {
+            checkChangeFromLevel1();
+        }
+        if(stage == level2)
+        {
+            checkChangeFromLevel2();
+        }
+        if(stage == level3)
+        {
+            checkChangeFromLevel3();
+        }
+        if(stage == steal)
+        {
+            checkChangeFromSteal();
+        }
+        if(stage == change)
+        {
+            checkChangeFromChange();
+        }
+    }
+
+    void checkChangeFromStart()
+    {
+        //Fra Start til Level1
+        if (transform.position.x > tSL1.position.x)
+        {
+            transform.position = sSL1.position;
+            stage = level1;
+        }
+    }
+
+    void checkChangeFromLevel1()
+    {
+        //Fra Level1 til Start
+        if (transform.position.x < tL1S.position.x)
+        {
+            transform.position = sL1S.position;
+            stage = start;
+            auido.changeTrack(1);
+        }
+        //Fra Level1 til Steal
+        if (transform.position.x > tL1R1.position.x)
+        {
+            transform.position = sL1R1.position;
+            stage = steal;
+            if (stealText)
+            {
+                SS.showText = true;
+                stealText = false;
+            }
+        }  
+    }
+
+    void checkChangeFromLevel2()
+    {
+        //Fra Level2 til Steal2
+        if(transform.position.x < tL2R2.position.x && transform.position.y > tL3L2.position.y)
+        {
+            transform.position = sL2R2.position;
+            stage = steal;
+        }
+        //Fra Level2 til Level3
+        if(transform.position.x > tL2L3.position.x)
+        {
+            transform.position = sL2L3.position;
+            stage = level3;
+            if (level23Text)
+            {
+                SS.showText = true;
+                level23Text = false;
+            }
+        }
+
+    }
+
+    void checkChangeFromLevel3()
+    {
+        //Fra Level3 til Level2
+        if (transform.position.x < tL3L2.position.x && transform.position.y < tL3L2.position.y)
+        {
+            transform.position = sL3L2.position;
+            stage = level2;
+        }
+        //Fra Level3 til Change
+        if (transform.position.x > tL3C.position.x)
+        {
+            transform.position = sL3C.position;
+            stage = change;
+            if (changeText)
+            {
+                SS.showText = true;
+                changeText = false;
+            }
+        }
+
+    }
+
+    void checkChangeFromSteal()
+    {
+        //Fra Steal til Level1
+        if(transform.position.x < tR1L1.position.x)
+        {
+            transform.position = sR1L1.position;
+            stage = level1;
+        }
+        //Fra Steal til Level2
+        if (transform.position.x > tR2L2.position.x)
+        {
+            transform.position = sR2L2.position;
+            stage = level2;
+        }
+    }
+
+    void checkChangeFromChange()
+    {
+        //Fra Change til Level3
+        if (transform.position.x < tCL3.position.x)
+        {
+            transform.position = sCL3.position;
+            stage = level3;
+
+            if(lS.changeState == 1)
+            {
+                SceneManager.LoadScene(2);
+            }
+        }
+    }
+}
