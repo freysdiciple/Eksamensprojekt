@@ -1,0 +1,113 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class transitionScript : MonoBehaviour
+{
+    
+    Transform player;
+    Animator animator;
+    Animator bossAnim;
+    itemHandler iH;
+    LightScript lS;
+    PlayerMovement pM;
+    public speechScript sS;
+
+    public Transform legPos;
+    public GameObject stealText;
+    public GameObject afterStealText;
+    public GameObject SatchelBag;
+    Vector3 satchelStartPos;
+
+    public bool stealing;
+    bool legOn = true;
+
+    bool playerInRange;
+    bool countDown;
+
+    float time;
+
+    // Start is called before the first frame update
+    void Start()
+    {
+        bossAnim = GetComponent<Animator>();
+        animator = GameObject.Find("Player").GetComponent<Animator>();
+        player = GameObject.Find("Player").GetComponent<Transform>();
+        iH = GameObject.Find("Player").GetComponent<itemHandler>();
+        lS = GameObject.Find("Player").GetComponent<LightScript>();
+        pM = GameObject.Find("Player").GetComponent<PlayerMovement>();
+
+    }
+
+    // Update is called once per frame
+    void FixedUpdate()
+    {
+        checkIfPlayerInRange();
+        if (playerInRange)
+        {
+            if (Input.GetKeyDown(KeyCode.E) && !stealing)
+            {
+                animator.SetTrigger("stealLeg");
+                stealing = true;
+                time = 0;
+                countDown = true;
+                pM.enabled = false;
+
+                satchelStartPos = SatchelBag.transform.position;
+                satchelStartPos.y -= 2.1f;
+                SatchelBag.transform.position = satchelStartPos;
+
+            }
+            if (!stealing)
+            {
+                stealText.SetActive(true);
+            }
+            else
+            {
+                stealText.SetActive(false);
+            }
+        }
+        else
+        {
+            stealText.SetActive(false);
+        }
+        if (countDown)
+        {
+            //Countdownen tillader at animationen har nok tid til at blive færdig, før man spiller videre.
+            time += Time.deltaTime;
+            player.position = new Vector3(legPos.position.x, player.position.y, player.position.z);
+
+            if(time > 0.6f && legOn)
+            {
+                legOn = false;
+                bossAnim.SetBool("legOff", true);
+            }
+
+            if (time > 6.4)
+            {
+                countDown = false;
+                iH.swordObtained = true;
+                lS.changeState = 1;
+                sS.showText = true;
+                afterStealText.SetActive(true);
+                pM.enabled = true;
+                stealing = false;
+
+                satchelStartPos = SatchelBag.transform.position;
+                satchelStartPos.y += 2.1f;
+                SatchelBag.transform.position = satchelStartPos;
+
+            }
+        }
+    }
+
+
+    void checkIfPlayerInRange()
+    {
+        if (Vector2.Distance(player.position, legPos.position) < 0.5f)
+        {
+            playerInRange = true;
+        }
+        else { playerInRange = false; }
+    }
+}
