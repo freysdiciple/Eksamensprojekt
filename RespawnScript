@@ -1,0 +1,194 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class respawn : MonoBehaviour
+{
+    //Dette script sidder på playeren og gør flere ting
+    //Scriptet styrer hans hp, checkpoints, og død
+    
+    
+    float health;
+    public float maxHealth = 100;
+    float healthFraction;
+
+    public int coinDamage = 40;
+    public int bombDamage = 80;
+    public int projectileDamage = 20;
+    public int fishDamage = 30;
+
+    PlayerMovement pM;
+    public movementController mC;
+    Rigidbody2D rb2d;
+    public Animator playerAnimator;
+
+    public Transform greenBar;
+    public Transform healthBar;
+    Vector3 barlocalScale;
+
+    int levelBottom = -30;
+
+    public int checkPointRange = 1;
+
+    public bool alive = true;
+    public bool hitByCoin;
+    public bool hitByBomb;
+    public float reviveTime = 2;
+    public float dieTime;
+
+    public Transform[] checkPoints;
+    Transform currentCheckPoint;
+
+
+    // Start is called before the first frame update
+    void Start()
+    {
+        currentCheckPoint = checkPoints[0];
+        spawnIfDead();
+        pM = GetComponent<PlayerMovement>();
+        mC = GetComponent<movementController>();
+        rb2d = GetComponent<Rigidbody2D>();
+        barlocalScale = greenBar.localScale;
+        
+    }
+
+    void Update()
+    {
+        if (hitByCoin)
+        {
+            if (mC.canTakeDamage)
+            {
+                health -= coinDamage;
+            }
+            hitByCoin = false;
+        }
+
+        dieAndSpawn();
+        newCheckPointIfReached();
+        healthBarShow();
+    }
+
+    public void spawnIfDead()
+    {
+        playerAnimator.SetBool("dead", false);
+        playerAnimator.SetBool("inWater", false);
+        transform.position = currentCheckPoint.transform.position;
+        alive = true;
+        mC.showItems = true;
+        //pM.crouch = false;
+        health = maxHealth;
+        
+    }
+
+    public void dieAndSpawn()
+    {
+        if(health < 1)
+        {
+            die();
+            health = 0;
+            Debug.Log("no health left");
+        }
+
+        if(transform.position.y < levelBottom)
+        {
+            Debug.Log("Fell too far");
+            die();
+        }
+
+        if (!alive)
+        {
+            rb2d.velocity = new Vector2(0,rb2d.velocity.y);
+        }
+
+        if (!alive && Time.time > dieTime + reviveTime)
+        {
+            spawnIfDead();
+
+        }
+    }
+
+    void die()
+    {
+        if (alive)
+        {
+            mC.showItems = false;
+            alive = false;
+            dieTime = Time.time;
+            playerAnimator.SetBool("dead", true);
+            playerAnimator.SetTrigger("death");
+            pM.crouch = false;
+            //refToSR.color = new Color(1, 1, 1, 0);
+        }
+       
+    }
+
+    void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (mC.canTakeDamage)
+        {
+            if (collision.gameObject.layer == 8)
+            {
+                health -= projectileDamage;
+            }
+            if(collision.gameObject.layer == 16)
+            {
+                health -= fishDamage;
+            }
+        }
+
+        if (collision.gameObject.layer == 11)
+        {
+            die();
+        }
+    }
+
+    void checkIfReachedCheckPoint(int which)
+    {
+        if(transform.position.x > checkPoints[which].position.x - checkPointRange && transform.position.x < checkPoints[which].position.x + checkPointRange)
+        {
+            if(transform.position.y > checkPoints[which].position.y - checkPointRange && transform.position.y < checkPoints[which].position.y + checkPointRange)
+            {
+                currentCheckPoint = checkPoints[which];
+            }
+        }
+    }
+
+    void newCheckPointIfReached()
+    {
+        for(int i = 0; i < checkPoints.Length; i++)
+        {
+            checkIfReachedCheckPoint(i);
+        }
+    }
+
+    void healthBarShow()
+    {
+        if(gameObject.transform.localScale.x < 0)
+        {
+            if(healthBar.localScale.x > 0)
+            {
+                Vector3 Xcale = healthBar.localScale;
+                Xcale.x *= -1;
+                healthBar.localScale = Xcale;
+            }
+        }
+        if (gameObject.transform.localScale.x > 0)
+        {
+            if (healthBar.localScale.x < 0)
+            {
+                Vector3 Xcale = healthBar.localScale;
+                Xcale.x *= -1;
+                healthBar.localScale = Xcale;
+            }
+        }
+
+        healthFraction = health / maxHealth;
+        Vector3 greenScale = new Vector3(2, 0.3f, 1);
+        greenScale.x = healthFraction * barlocalScale.x;
+        greenBar.localScale = greenScale;
+
+        Vector3 greenBarPos = new Vector3(-1+healthFraction,0,0);
+        greenBar.localPosition = greenBarPos;
+    }
+
+}
