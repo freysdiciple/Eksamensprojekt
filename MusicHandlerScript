@@ -1,0 +1,61 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class audioHandler : MonoBehaviour
+{
+    AudioSource radio;
+    sceneTransitionScript scene;
+    respawn repawn;
+    movementController mC;
+    public AudioClip[] clips;
+    bool change;
+    int stage;
+    int prevStage;
+    int curr;
+
+    // Start is called before the first frame update
+    void Start()
+    {
+        radio = GetComponent<AudioSource>();
+        scene = GetComponent<sceneTransitionScript>();
+        repawn = GetComponent<respawn>();
+        mC = GetComponent<movementController>();
+        changeTrack(0);
+    }
+
+    // Update is called once per frame
+
+    private void Update()
+    {
+        stage = scene.stage;
+
+        if (stage != prevStage)
+        {
+            if(stage == 1)
+            {
+                curr = 1;
+                changeTrack(curr);
+            }
+            if(stage == 5)
+            {
+                curr = 2;
+                changeTrack(curr);
+            }
+
+        }
+        if (!repawn.alive)
+        {
+            changeTrack(curr);
+        }
+
+        prevStage = stage;
+    }
+
+    public void changeTrack(int i)
+    {
+        radio.Stop();
+        radio.clip = clips[i];
+        radio.Play();
+    }
+}
