@@ -1,0 +1,132 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+
+public class playButtonScript : MonoBehaviour
+{
+    public Transform ptl;
+    public Transform pbr;
+    public Transform otl;
+    public Transform obr;
+    public Transform qtl;
+    public Transform qbr;
+
+    public Animator pAnimator;
+    public Animator oAnimator;
+    public Animator qAnimator;
+
+    Vector3 mPos;
+
+    // Start is called before the first frame update
+    void Start()
+    {
+        
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        calculateMousePos();
+        playButton();
+        quitButton();
+        optionsButton();
+    }
+
+    void calculateMousePos()
+    {
+        //Får mousePos
+        mPos = Input.mousePosition;
+        mPos = Camera.main.ScreenToWorldPoint(mPos);
+        
+        //Fortæller de forskellige animators at mousePressed
+        if (Input.GetMouseButton(0))
+        {
+            pAnimator.SetBool("mousePressed", true);
+            qAnimator.SetBool("mousePressed", true);
+            oAnimator.SetBool("mousePressed", true);
+        }
+        else
+        {
+            pAnimator.SetBool("mousePressed", false);
+            qAnimator.SetBool("mousePressed", false);
+            oAnimator.SetBool("mousePressed", false);
+        }
+    }
+
+    void playButton()
+    {
+    
+        if(mPos.x > ptl.position.x && mPos.x < pbr.position.x)
+        {
+            if (mPos.y < ptl.position.y && mPos.y > pbr.position.y)
+            {
+                //Hvis musen er over knappen, fortælles dette til animatoren
+                pAnimator.SetBool("mouseOver", true);
+
+                if (Input.GetMouseButtonUp(0))
+                {
+                    //Starter spillet når man trykker
+                    SceneManager.LoadScene(1);
+                }
+            }
+            else
+            {
+                pAnimator.SetBool("mouseOver", false);
+            }
+        }
+        else
+        {
+            pAnimator.SetBool("mouseOver", false);
+        }
+    }
+
+    void quitButton()
+    {
+        if (mPos.x > qtl.position.x && mPos.x < qbr.position.x)
+        {
+            if (mPos.y < qtl.position.y && mPos.y > qbr.position.y)
+            {
+                qAnimator.SetBool("mouseOver", true);
+
+                if (Input.GetMouseButtonUp(0))
+                {
+                    //Slukker programmet når man trykker
+                    Application.Quit();
+                }
+            }
+            else
+            {
+                qAnimator.SetBool("mouseOver", false);
+            }
+        }
+        else
+        {
+            qAnimator.SetBool("mouseOver", false);
+        }
+    }
+
+    void optionsButton()
+    {
+        if (mPos.x > otl.position.x && mPos.x < obr.position.x)
+        {
+            if (mPos.y < otl.position.y && mPos.y > obr.position.y)
+            {
+                oAnimator.SetBool("mouseOver", true);
+
+                if (Input.GetMouseButtonUp(0))
+                {
+                    
+                }
+            }
+            else
+            {
+                oAnimator.SetBool("mouseOver", false);
+            }
+        }
+        else
+        {
+            oAnimator.SetBool("mouseOver", false);
+        }
+    }
+}
