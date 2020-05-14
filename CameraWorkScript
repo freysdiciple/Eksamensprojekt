@@ -1,0 +1,152 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using Cinemachine;
+
+public class cameraWork : MonoBehaviour
+{
+
+    public Transform player;
+    public Transform moneybag;
+    public movementController mC;
+    public sceneTransitionScript sT;
+    public transitionScript tS;
+    Camera mainCamera;
+    Vector3 Offset = new Vector3(0, 0, -10);
+
+    float standardOrthSize = 7f;
+    float orthSizeChange;
+    float orthBit;
+    float smoothSpeed = 4;
+    float changeSpeed = 0.2f;
+
+    //Levelindex
+    int start;
+    int level1 = 1;
+    int steal = 2;
+    int level2 = 3;
+    int level3 = 4;
+    int change = 5;
+
+    bool follow = true;
+
+
+
+    void Start()
+    {
+        mainCamera = GetComponent<Camera>();
+    }
+
+    // Update is called once per frame
+    void FixedUpdate()
+    {
+        if(player.position.x > 36 && player.position.x < 40)
+        {
+            firstBossView();
+        }
+
+        else if(player.position.x > 205 && player.position.x < 207)
+        {
+            secondBossView();
+        }
+        else if (tS.stealing)
+        {
+            bigBossStealing();
+        }
+
+        else if(player.position.x > 506)
+        {
+            bigBossView();
+        }
+
+        else if (follow)
+        {
+            followPlayer();
+
+            if (mC.inPool)
+            {
+                orthSizeChange = 0;
+            }
+            else if (sT.stage == start)
+            {
+                orthSizeChange = 0;
+            }
+            else if (sT.stage == level1)
+            {
+                orthSizeChange = 2;
+            }
+            else if (sT.stage == level2)
+            {
+                orthSizeChange = 2;
+            }
+            else if (sT.stage == level3)
+            {
+                orthSizeChange = 2;
+            }
+            else if (sT.stage == steal)
+            {
+                orthSizeChange = 5;
+            }
+            else if (sT.stage == change)
+            {
+                orthSizeChange = 0;
+            }
+
+            changeSize();
+        }
+        
+    }
+
+    void changeSize()
+    {
+        if (orthBit < orthSizeChange)
+        {
+            orthBit += changeSpeed;
+        }
+        if (orthBit > orthSizeChange)
+        {
+            orthBit -= changeSpeed;
+        }
+        mainCamera.orthographicSize = standardOrthSize + orthBit;
+        
+        
+    }
+
+    void followPlayer()
+    {
+        Vector3 desiredPosition = player.position + Offset;
+        Vector3 smoothPosition = Vector3.Lerp(transform.position, desiredPosition, smoothSpeed * Time.deltaTime);
+        transform.position = smoothPosition;
+    }
+
+    void firstBossView()
+    {
+        Vector3 pos = new Vector3(32,3,-10);
+        transform.position = Vector3.Lerp(transform.position, pos, smoothSpeed*Time.deltaTime);
+        orthSizeChange = 5;
+        changeSize();
+    }
+
+    void secondBossView()
+    {
+        Vector3 pos = new Vector3(196, 33, -10);
+        transform.position = Vector3.Lerp(transform.position, pos, smoothSpeed * Time.deltaTime);
+        orthSizeChange = 5;
+        changeSize();
+    }
+
+    void bigBossView()
+    {
+        Vector3 pos = new Vector3(517, 15, -10);
+        transform.position = Vector3.Lerp(transform.position, pos, smoothSpeed * Time.deltaTime);
+        orthSizeChange = 4;
+        changeSize();
+    }
+
+    void bigBossStealing()
+    {
+        orthSizeChange = -4;
+        followPlayer();
+        changeSize();
+    }
+}
